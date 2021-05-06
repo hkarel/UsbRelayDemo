@@ -1,0 +1,5 @@
+<RCC>
+    <qresource prefix="/">
+        <file>usb_relay_demo.conf</file>
+    </qresource>
+</RCC>
