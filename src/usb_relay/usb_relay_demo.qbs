@@ -26,19 +26,25 @@ Product {
         Qt.core.cpp.includePaths // Декларация для подавления Qt warning-ов
     )
 
-//    Group {
-//        name: "resources"
-//        files: [
-//            "sizterm.qrc",
-//        ]
-//    }
+    cpp.dynamicLibraries: [
+        "pthread",
+        "usb",
+    ]
+
+    Group {
+        name: "resources"
+        files: [
+            "usb_relay_demo.qrc",
+        ]
+    }
 
     files: [
         "main_window.cpp",
         "main_window.h",
         "main_window.ui",
+        "usb_relay.cpp",
+        "usb_relay.h",
         "usb_relay_demo.cpp",
-        "usb_relay_demo.qrc",
     ]
 
 //    property var test: {
@@ -46,5 +52,4 @@ Product {
 //        console.info(project.decklinkIncludePath);
 //    }
 
-
-} // Product
+}

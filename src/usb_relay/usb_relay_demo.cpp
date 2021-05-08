@@ -11,6 +11,8 @@
 #include "shared/qt/logger_operators.h"
 #include "shared/qt/version_number.h"
 
+#include "usb_relay.h"
+
 #include <QApplication>
 #include <stdlib.h>
 #include <unistd.h>
@@ -29,6 +31,8 @@ void stopLog()
 void stopProgram()
 {
     //db::firebird::pool().close();
+
+    usb::relay().stop();
 
     log_info << log_format("'%?' is stopped", APPLICATION_NAME);
     stopLog();
@@ -113,7 +117,21 @@ int main(int argc, char *argv[])
         appl.setApplicationDisplayName(APPLICATION_NAME);
         appl.setApplicationVersion(VERSION_PROJECT);
 
+        if (!usb::relay().init(/*{0, 1}*/))
+        {
+            stopProgram();
+            return 1;
+        }
+        usb::relay().start();
+
         MainWindow mw;
+
+        chk_connect_q(&usb::relay(), &usb::Relay::attached,
+                      &mw, &MainWindow::relayAttached)
+        chk_connect_q(&usb::relay(), &usb::Relay::detached,
+                      &mw, &MainWindow::relayDetached)
+        chk_connect_q(&usb::relay(), &usb::Relay::changed,
+                      &mw, &MainWindow::relayChanged)
         mw.init();
         mw.loadGeometry();
         mw.show();
