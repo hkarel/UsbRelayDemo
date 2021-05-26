@@ -87,6 +87,9 @@ void MainWindow::relayAttached()
     QVector<int> states = usb::relay().states();
     for (int i = 0; i < states.count(); ++i)
         _buttons[i]->setChecked(states[i]);
+
+    ui->btnTurnOnAll->setEnabled(true);
+    ui->btnTurnOffAll->setEnabled(true);
 }
 
 void MainWindow::relayDetached()
@@ -97,6 +100,9 @@ void MainWindow::relayDetached()
 
     for (int i = 0; i < _buttons.count(); ++i)
         _buttons[i]->setEnabled(false);
+
+    ui->btnTurnOnAll->setEnabled(false);
+    ui->btnTurnOffAll->setEnabled(false);
 }
 
 void MainWindow::relayChanged(int /*relayNumber*/)
