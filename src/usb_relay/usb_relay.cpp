@@ -16,13 +16,14 @@
 #define log_debug_m   alog::logger().debug   (alog_line_location, "UsbRelay")
 #define log_debug2_m  alog::logger().debug2  (alog_line_location, "UsbRelay")
 
-#define USB_RELAY_VENDOR_ID    0x16c0
-#define USB_RELAY_DEVICE_ID    0x05df
+#define USB_RELAY_VENDOR_ID      0x16c0
+#define USB_RELAY_DEVICE_ID      0x05df
 
-#define USBRQ_HID_GET_REPORT   0x01
-#define USBRQ_HID_SET_REPORT   0x09
-#define REPORT_REQUEST_TIMEOUT 2*1000  // 2 секунды
-#define USB_CONTINUOUS_ERRORS  5
+#define USBRQ_HID_GET_REPORT     0x01
+#define USBRQ_HID_SET_REPORT     0x09
+#define REPORT_REQUEST_TIMEOUT   2*1000  // 2 секунды
+#define USB_CONTINUOUS_ERRORS_1  3
+#define USB_CONTINUOUS_ERRORS_2  5
 
 namespace usb {
 
@@ -60,6 +61,8 @@ void Relay::run()
 {
     log_info_m << "Started";
 
+    quint32 captureAttempts = 0;
+
     while (true)
     {
         CHECK_QTHREADEX_STOP
@@ -71,9 +74,16 @@ void Relay::run()
         if (!_deviceInitialized)
         {
             releaseDevice();
-            sleep(10);
+            int timeout = 2;
+            if (captureAttempts > 40)
+                timeout = 15;
+            else if (captureAttempts > 20)
+                timeout = 10;
+            ++captureAttempts;
+            sleep(timeout);
             continue;
         }
+        captureAttempts = 0;
 
         log_info_m << "USB relay emit signal 'attached'";
         emit attached();
@@ -102,7 +112,11 @@ void Relay::run()
         {
             CHECK_QTHREADEX_STOP
 
-            if (_usbContinuousErrors > USB_CONTINUOUS_ERRORS)
+            if (_usbContinuousErrors >= USB_CONTINUOUS_ERRORS_1
+                && _usbLastErrorCode == -19 /*Ошибка: 'Нет устройства'*/)
+                break;
+
+            if (_usbContinuousErrors >= USB_CONTINUOUS_ERRORS_2)
                 break;
 
             { //Block for QMutexLocker
@@ -263,21 +277,26 @@ bool Relay::captureDevice()
                     continue;
                 }
 
-                bool badSerial = false;
+                //bool badSerial = false;
                 const int serialStrLen = 5;
                 for (int i = 0; i < serialStrLen; ++i)
+                {
                     if ((uchar(buff[i]) <= 0x20) || (uchar(buff[i]) >= 0x7F))
                     {
-                        log_error_m << "Bad USB relay serial id";
-                        badSerial = true;
-                        break;
+                        //log_error_m << "Bad USB relay serial id";
+                        //badSerial = true;
+                        //break;
+                        log_error_m << log_format(
+                            "Incorrect serial id. Symbol index: %?; code: %?",
+                            i, int(uchar(buff[i])));
                     }
-
-                if (badSerial)
-                {
-                    USB_CLOSE;
-                    continue;
                 }
+                //if (badSerial)
+                //{
+                //    USB_CLOSE;
+                //    continue;
+                //}
+
                 if (buff[serialStrLen + 1] != 0)
                 {
                     log_error_m << "Bad USB relay id string";
@@ -320,6 +339,8 @@ void Relay::releaseDevice()
 
         _deviceHandle = nullptr;
         _deviceInitialized = false;
+        _usbContinuousErrors = 0;
+        _usbLastErrorCode = 0;
         _product.clear();
         _serial.clear();
         _count = 0;
@@ -340,9 +361,11 @@ int Relay::readStates(char* buff, int buffSize)
         alog::Line logLine =
             log_error_m << "Failed send message to USB interface";
         if (res < 0)
-            logLine << ". Detail: " << usb_strerror();
-
-        _usbContinuousErrors += 1;
+        {
+            _usbLastErrorCode = res;
+            logLine << ". Error code: " << res << "; " << usb_strerror();
+        }
+        ++_usbContinuousErrors;
         return -1;
     }
 
@@ -352,7 +375,8 @@ int Relay::readStates(char* buff, int buffSize)
             log_debug_m << "USB continuous errors: " << int(_usbContinuousErrors);
     }
     _usbContinuousErrors = 0;
-    return quint8(buff[7]); /* byte of relay states */
+    _usbLastErrorCode = 0;
+    return quint8(buff[7]); // Байт 7 содержит битовые флаги состояний реле
 }
 
 QVector<int> Relay::states() const
@@ -373,7 +397,6 @@ QVector<int> Relay::statesInternal() const
 
 //bool Relay::toggle(const QVector<int> states)
 //{
-
 //}
 
 bool Relay::toggle(int relayNumber, bool value)
@@ -456,9 +479,11 @@ bool Relay::toggleInternal(int relayNumber, bool value)
         alog::Line logLine =
             log_error_m << "Failed send message to USB interface";
         if (res < 0)
-            logLine << ". Detail: " << usb_strerror();
-
-        _usbContinuousErrors += 1;
+        {
+            _usbLastErrorCode = res;
+            logLine << ". Error code: " << res << "; " << usb_strerror();
+        }
+        ++_usbContinuousErrors;
         return false;
     }
 
@@ -484,8 +509,9 @@ bool Relay::toggleInternal(int relayNumber, bool value)
             "USB relay %? turn %?", relayNumber, (value) ? "ON" : "OFF");
 
     emit changed(relayNumber);
-    _usbContinuousErrors = 0;
 
+    _usbContinuousErrors = 0;
+    _usbLastErrorCode = 0;
     return true;
 }
 

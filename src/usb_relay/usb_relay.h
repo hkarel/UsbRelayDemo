@@ -64,6 +64,7 @@ private:
     usb_dev_handle*  _deviceHandle = {nullptr};
     std::atomic_bool _deviceInitialized = {false};
     std::atomic_int  _usbContinuousErrors = {0};
+    std::atomic_int  _usbLastErrorCode = {0};
 
     QString _product;
     QString _serial;
