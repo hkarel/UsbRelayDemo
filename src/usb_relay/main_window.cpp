@@ -86,7 +86,10 @@ void MainWindow::relayAttached()
 
     QVector<int> states = usb::relay().states();
     for (int i = 0; i < states.count(); ++i)
+    {
         _buttons[i]->setChecked(states[i]);
+        setButtonStyleSheet(_buttons[i]);
+    }
 
     ui->btnTurnOnAll->setEnabled(true);
     ui->btnTurnOffAll->setEnabled(true);
@@ -99,7 +102,11 @@ void MainWindow::relayDetached()
     ui->labelRelayCount->clear();
 
     for (int i = 0; i < _buttons.count(); ++i)
+    {
         _buttons[i]->setEnabled(false);
+        _buttons[i]->setChecked(false);
+        setButtonStyleSheet(_buttons[i]);
+    }
 
     ui->btnTurnOnAll->setEnabled(false);
     ui->btnTurnOffAll->setEnabled(false);
@@ -109,13 +116,19 @@ void MainWindow::relayChanged(int /*relayNumber*/)
 {
     QVector<int> states = usb::relay().states();
     for (int i = 0; i < states.count(); ++i)
+    {
         _buttons[i]->setChecked(states[i]);
+        setButtonStyleSheet(_buttons[i]);
+    }
 }
 
 void MainWindow::_on_btnRelay_clicked(bool checked)
 {
     int index = sender()->property("RelayIndex").toInt();
-    usb::relay().toggle(index, checked);
+    QPushButton* button = qobject_cast<QPushButton*>(sender());
+
+    if (!usb::relay().toggle(index, checked))
+        button->setChecked(!checked);
 }
 
 void MainWindow::on_btnTurnOnAll_clicked(bool)
@@ -126,4 +139,12 @@ void MainWindow::on_btnTurnOnAll_clicked(bool)
 void MainWindow::on_btnTurnOffAll_clicked(bool)
 {
     usb::relay().toggle(0, false);
+}
+
+void MainWindow::setButtonStyleSheet(QPushButton* btn)
+{
+    if (btn->isChecked())
+        btn->setStyleSheet("background-color: rgb(183, 226, 178)");
+    else
+        btn->setStyleSheet("");
 }

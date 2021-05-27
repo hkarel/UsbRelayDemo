@@ -31,7 +31,8 @@ public slots:
     void on_btnTurnOnAll_clicked(bool);
     void on_btnTurnOffAll_clicked(bool);
 
-
+private:
+    void setButtonStyleSheet(QPushButton*);
 
 private:
     Ui::MainWindow *ui;
