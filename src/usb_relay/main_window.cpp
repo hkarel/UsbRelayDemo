@@ -9,6 +9,8 @@
 #include "shared/qt/quuidex.h"
 #include "shared/qt/logger_operators.h"
 
+#include <QMessageBox>
+
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::MainWindow)
@@ -120,6 +122,11 @@ void MainWindow::relayChanged(int /*relayNumber*/)
         _buttons[i]->setChecked(states[i]);
         setButtonStyleSheet(_buttons[i]);
     }
+}
+
+void MainWindow::relayFailChange(int relayNumber, const QString& errorMessage)
+{
+    QMessageBox::critical(this, "Error", errorMessage);
 }
 
 void MainWindow::_on_btnRelay_clicked(bool checked)

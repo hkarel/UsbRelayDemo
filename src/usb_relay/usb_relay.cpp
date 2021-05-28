@@ -409,16 +409,20 @@ bool Relay::toggleInternal(int relayNumber, bool value)
 {
     if (!_deviceInitialized)
     {
-        log_error_m << "Failed toggle relay. Device not initialized";
+        alog::Line logLine =
+            log_error_m << "Failed toggle relay. Device not initialized";
+        emit failChange(relayNumber, QString::fromStdString(logLine.impl->buff));
         return false;
     }
 
     int relayCount = _count;
     if (relayNumber > relayCount)
     {
-        log_error_m << log_format(
+        alog::Line logLine = log_error_m << log_format(
             "Failed toggle relay number %?. Number out of range [1..%?]",
             relayNumber, count());
+
+        emit failChange(relayNumber, QString::fromStdString(logLine.impl->buff));
         return false;
     }
 
@@ -444,7 +448,8 @@ bool Relay::toggleInternal(int relayNumber, bool value)
         res = readStates(buff, sizeof(buff));
         if (res < 0)
         {
-            log_error_m << "Failed get relays current state";
+            alog::Line logLine = log_error_m << "Failed get relays current state";
+            emit failChange(relayNumber, QString::fromStdString(logLine.impl->buff));
             return false;
         }
 
@@ -484,20 +489,23 @@ bool Relay::toggleInternal(int relayNumber, bool value)
             logLine << ". Error code: " << res << "; " << usb_strerror();
         }
         ++_usbContinuousErrors;
+        emit failChange(relayNumber, QString::fromStdString(logLine.impl->buff));
         return false;
     }
 
     res = readStates(buff, sizeof(buff));
     if (res < 0)
     {
-        log_error_m << "Failed get relays current state";
+        alog::Line logLine = log_error_m << "Failed get relays current state";
+        emit failChange(relayNumber, QString::fromStdString(logLine.impl->buff));
         return false;
     }
     _states = quint8(res);
 
     if (_states != expectState)
     {
-        log_error_m << "Failed set relays to new state";
+        alog::Line logLine = log_error_m << "Failed set relays to new state";
+        emit failChange(relayNumber, QString::fromStdString(logLine.impl->buff));
         return false;
     }
 

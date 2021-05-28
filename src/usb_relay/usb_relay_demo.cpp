@@ -132,6 +132,8 @@ int main(int argc, char *argv[])
                       &mw, &MainWindow::relayDetached)
         chk_connect_q(&usb::relay(), &usb::Relay::changed,
                       &mw, &MainWindow::relayChanged)
+        chk_connect_q(&usb::relay(), &usb::Relay::failChange,
+                      &mw, &MainWindow::relayFailChange)
         mw.init();
         mw.loadGeometry();
         mw.show();

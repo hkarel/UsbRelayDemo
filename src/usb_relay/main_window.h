@@ -26,6 +26,7 @@ public slots:
     void relayAttached();
     void relayDetached();
     void relayChanged(int relayNumber);
+    void relayFailChange(int relayNumber, const QString& errorMessage);
 
     void _on_btnRelay_clicked(bool);
     void on_btnTurnOnAll_clicked(bool);

@@ -33,7 +33,10 @@ public:
 signals:
     void attached();
     void detached();
-    bool changed(int relayNumber);
+    void changed(int relayNumber);
+
+    // Сигнал эмитируется если не удалось изменить состояние реле
+    void failChange(int relayNumber, const QString& errorMessage);
 
 public slots:
     //bool toggle(const QVector<int> states);
