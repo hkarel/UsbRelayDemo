@@ -51,6 +51,78 @@ QString Relay::serial() const
     return _serial;
 }
 
+bool Relay::setSerial(const QString& value)
+{
+    const int serialLen = 5;
+    QByteArray val = value.toUtf8();
+
+    if (val.length() > serialLen)
+        val.resize(serialLen);
+
+    while (val.length() < serialLen)
+        val.append('0');
+
+    for (int i = 0; i < serialLen; ++i)
+    {
+        uchar ch = uchar(val[i]);
+        if ((ch <= 0x20) || (ch >= 0x7F))
+        {
+            log_error_m << log_format(
+                "Incorrect USB relay serial. Symbol index: %?; code: %?",
+                i, int(ch));
+            return false;
+        }
+    }
+
+    char buff[8] = {0};
+    int  buffSize = sizeof(buff);
+
+    buff[0] = 0xFA; // CMD_SET_SERIAL;
+    for (int i = 1; i <= serialLen; ++i)
+        buff[i] = val[i - 1];
+
+    int res = usb_control_msg(_deviceHandle,
+                              USB_TYPE_CLASS | USB_RECIP_DEVICE | USB_ENDPOINT_OUT,
+                              USBRQ_HID_SET_REPORT,
+                              0, // value
+                              0, // index
+                              buff, buffSize,
+                              REPORT_REQUEST_TIMEOUT);
+    if (res != buffSize)
+    {
+        alog::Line logLine =
+            log_error_m << "Failed set USB relay serial: " << val;
+        if (res < 0)
+        {
+            _usbLastErrorCode = res;
+            logLine << ". Error code: " << res << "; " << usb_strerror();
+        }
+        ++_usbContinuousErrors;
+        return false;
+    }
+
+    memset(buff, 0, buffSize);
+    res = readStates(buff, buffSize);
+    if (res < 0)
+    {
+        log_error_m << "Failed get USB relay serial";
+        return false;
+    }
+    if (buff[serialLen + 1] != 0)
+    {
+        log_error_m << "Bad USB relay serial string";
+        return false;
+    }
+
+    QString serial = QString::fromLatin1(buff);
+    log_verbose_m << "USB relay new serial: " << serial;
+
+    QMutexLocker locker {&_threadLock}; (void) locker;
+
+    _serial = serial;
+    return true;
+}
+
 int Relay::count() const
 {
     QMutexLocker locker {&_threadLock}; (void) locker;
@@ -259,7 +331,7 @@ bool Relay::captureDevice()
                 }
 
                 int relayCount = int(buff[len]) - int('0');
-                QSet countCheck {1, 2, 4, 8};
+                QSet<int> countCheck {1, 2, 4, 8};
                 if (!countCheck.contains(relayCount))
                 {
                     log_error_m << log_format(
@@ -277,29 +349,20 @@ bool Relay::captureDevice()
                     continue;
                 }
 
-                //bool badSerial = false;
-                const int serialStrLen = 5;
-                for (int i = 0; i < serialStrLen; ++i)
+                const int serialLen = 5;
+                for (int i = 0; i < serialLen; ++i)
                 {
-                    if ((uchar(buff[i]) <= 0x20) || (uchar(buff[i]) >= 0x7F))
+                    uchar ch = uchar(buff[i]);
+                    if ((ch <= 0x20) || (ch >= 0x7F))
                     {
-                        //log_error_m << "Bad USB relay serial id";
-                        //badSerial = true;
-                        //break;
                         log_error_m << log_format(
-                            "Incorrect serial id. Symbol index: %?; code: %?",
-                            i, int(uchar(buff[i])));
+                            "Incorrect USB relay serial. Symbol index: %?; code: %?",
+                            i, int(ch));
                     }
                 }
-                //if (badSerial)
-                //{
-                //    USB_CLOSE;
-                //    continue;
-                //}
-
-                if (buff[serialStrLen + 1] != 0)
+                if (buff[serialLen + 1] != 0)
                 {
-                    log_error_m << "Bad USB relay id string";
+                    log_error_m << "Bad USB relay serial string";
                     USB_CLOSE;
                     continue;
                 }
@@ -426,8 +489,10 @@ bool Relay::toggleInternal(int relayNumber, bool value)
         return false;
     }
 
-    int res;
+    int  res;
     char buff[8];
+    int  buffSize = sizeof(buff);
+
     quint8 cmd1 = 0;
     quint8 cmd2 = 0;
     quint8 expectState = 0;
@@ -436,16 +501,19 @@ bool Relay::toggleInternal(int relayNumber, bool value)
     {
         if (value == true)
         {
-            cmd1 = 0xFE;
+            cmd1 = 0xFE; // Включить все реле
             expectState = (1U << relayCount) - 1;
         }
         else
-            cmd1 = 0xFC;
+        {
+            cmd1 = 0xFC; // Выключить все реле
+            expectState = 0;
+        }
     }
     else
     {
-        memset(buff, 0, sizeof(buff));
-        res = readStates(buff, sizeof(buff));
+        memset(buff, 0, buffSize);
+        res = readStates(buff, buffSize);
         if (res < 0)
         {
             alog::Line logLine = log_error_m << "Failed get relays current state";
@@ -457,12 +525,12 @@ bool Relay::toggleInternal(int relayNumber, bool value)
 
         if (value == true)
         {
-            cmd1 = 0xFF;
+            cmd1 = 0xFF; // Включить реле по номеру
             expectState |= (1U << (relayNumber - 1));
         }
         else
         {
-            cmd1 = 0xFD;
+            cmd1 = 0xFD; // Выключить реле по номеру
             expectState &= ~(1U << (relayNumber - 1));
         }
         cmd2 = quint8(relayNumber);
@@ -477,9 +545,9 @@ bool Relay::toggleInternal(int relayNumber, bool value)
                           //USB_HID_REPORT_TYPE_FEATURE << 8 | (reportId & 0xff), // value
                           0, // value
                           0, // index
-                          buff, 4,
+                          buff, buffSize,
                           REPORT_REQUEST_TIMEOUT);
-    if (res != 4)
+    if (res != buffSize)
     {
         alog::Line logLine =
             log_error_m << "Failed send message to USB interface";
@@ -493,7 +561,7 @@ bool Relay::toggleInternal(int relayNumber, bool value)
         return false;
     }
 
-    res = readStates(buff, sizeof(buff));
+    res = readStates(buff, buffSize);
     if (res < 0)
     {
         alog::Line logLine = log_error_m << "Failed get relays current state";

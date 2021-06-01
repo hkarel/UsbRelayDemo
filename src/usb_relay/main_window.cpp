@@ -10,6 +10,7 @@
 #include "shared/qt/logger_operators.h"
 
 #include <QMessageBox>
+#include <QInputDialog>
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
@@ -93,6 +94,7 @@ void MainWindow::relayAttached()
         setButtonStyleSheet(_buttons[i]);
     }
 
+    ui->btnSetSerial->setEnabled(true);
     ui->btnTurnOnAll->setEnabled(true);
     ui->btnTurnOffAll->setEnabled(true);
 }
@@ -110,6 +112,7 @@ void MainWindow::relayDetached()
         setButtonStyleSheet(_buttons[i]);
     }
 
+    ui->btnSetSerial->setEnabled(false);
     ui->btnTurnOnAll->setEnabled(false);
     ui->btnTurnOffAll->setEnabled(false);
 }
@@ -127,6 +130,23 @@ void MainWindow::relayChanged(int /*relayNumber*/)
 void MainWindow::relayFailChange(int relayNumber, const QString& errorMessage)
 {
     QMessageBox::critical(this, "Error", errorMessage);
+}
+
+void MainWindow::on_btnSetSerial_clicked(bool)
+{
+    QString serial = usb::relay().serial();
+    QString msg = "Serial number can contain only numbers and Latin letters,\n"
+                  "and should not exceed 5 characters";
+    bool ok;
+    QString value = QInputDialog::getText(this, "Input serial", msg,
+                                          QLineEdit::Normal, serial, &ok);
+    if (ok && !value.isEmpty())
+    {
+        if (usb::relay().setSerial(value))
+            ui->labelSerialStr->setText(usb::relay().serial());
+        else
+            QMessageBox::critical(this, "Error", "Failed set new serial number");
+    }
 }
 
 void MainWindow::_on_btnRelay_clicked(bool checked)
