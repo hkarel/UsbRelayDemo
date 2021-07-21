@@ -11,7 +11,7 @@
 #include "shared/qt/logger_operators.h"
 #include "shared/qt/version_number.h"
 
-#include "usb_relay.h"
+#include "usbrelay/usb_relay.h"
 
 #include <QApplication>
 #include <stdlib.h>

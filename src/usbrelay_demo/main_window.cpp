@@ -1,13 +1,14 @@
 #include "main_window.h"
 #include "ui_main_window.h"
 
-#include "usb_relay.h"
 
 #include "shared/logger/logger.h"
 #include "shared/logger/format.h"
 #include "shared/config/appl_conf.h"
 #include "shared/qt/quuidex.h"
 #include "shared/qt/logger_operators.h"
+
+#include "usbrelay/usb_relay.h"
 
 #include <QMessageBox>
 #include <QInputDialog>
@@ -69,7 +70,7 @@ void MainWindow::saveGeometry()
 
 void MainWindow::loadGeometry()
 {
-    QVector<int> v {0, 0, 800, 600};
+    QVector<int> v {0, 0, 380, 320};
     config::state().getValue("windows.main_window.geometry", v);
     move(v[0], v[1]);
     resize(v[2], v[3]);

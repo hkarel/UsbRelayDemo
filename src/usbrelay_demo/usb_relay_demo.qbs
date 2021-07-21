@@ -2,7 +2,7 @@ import qbs
 import QbsUtl
 
 Product {
-    name: "UsbRelay"
+    name: "UsbRelay (Demo)"
     targetName: "usb-relay-demo"
     condition: true
 
@@ -11,6 +11,7 @@ Product {
 
     Depends { name: "cpp" }
     Depends { name: "SharedLib" }
+    Depends { name: "UsbRelay" }
     Depends { name: "Yaml" }
     Depends { name: "Qt"; submodules: ["core", "widgets"] }
 
@@ -42,8 +43,6 @@ Product {
         "main_window.cpp",
         "main_window.h",
         "main_window.ui",
-        "usb_relay.cpp",
-        "usb_relay.h",
         "usb_relay_demo.cpp",
     ]
 

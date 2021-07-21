@@ -58,7 +58,8 @@ Project {
 
     references: [
         "src/shared/shared.qbs",
-        "src/usb_relay/usb_relay_demo.qbs",
+        "src/usbrelay/usb_relay.qbs",
+        "src/usbrelay_demo/usb_relay_demo.qbs",
         "src/yaml/yaml.qbs",
     ]
 }

@@ -7,3 +7,6 @@
 [submodule "src/yaml"]
 	path = src/yaml
 	url = https://github.com/hkarel/yaml-cpp.git
+[submodule "src/usbrelay"]
+	path = src/usbrelay
+	url = https://github.com/hkarel/UsbRelay.git
