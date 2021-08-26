@@ -21,23 +21,14 @@
 
 using namespace std;
 
-void stopLog()
-{
-    alog::logger().flush();
-    alog::logger().waitingFlush();
-    alog::logger().stop();
-}
-
 void stopProgram()
 {
-    //db::firebird::pool().close();
-
     usb::relay().stop();
+    usb::relay().deinit();
 
     log_info << log_format("'%?' is stopped", APPLICATION_NAME);
-    stopLog();
+    alog::stop();
 }
-
 
 int main(int argc, char *argv[])
 {
@@ -63,7 +54,7 @@ int main(int argc, char *argv[])
         {
             if (!config::base().readFile(configFile.toStdString()))
             {
-                stopLog();
+                alog::stop();
                 return 1;
             }
         }
@@ -79,7 +70,7 @@ int main(int argc, char *argv[])
 
             if (!config::base().readString(conf.toStdString()))
             {
-                stopLog();
+                alog::stop();
                 return 1;
             }
         }
@@ -98,7 +89,7 @@ int main(int argc, char *argv[])
         // Создаем дефолтный сэйвер для логгера
         if (!alog::configDefaultSaver())
         {
-            stopLog();
+            alog::stop();
             return 1;
         }
 

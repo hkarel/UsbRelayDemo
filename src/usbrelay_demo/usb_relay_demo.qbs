@@ -29,7 +29,7 @@ Product {
 
     cpp.dynamicLibraries: [
         "pthread",
-        "usb",
+        "usb-1.0",
     ]
 
     Group {
