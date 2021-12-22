@@ -149,6 +149,10 @@ void MainWindow::on_btnSetSerial_clicked(bool)
             QMessageBox::critical(this, "Error", "Failed set new serial number");
     }
 }
+void MainWindow::on_lineAttachSerial_textEdited(QString text)
+{
+    usb::relay().setAttachSerial(text);
+}
 
 void MainWindow::_on_btnRelay_clicked(bool checked)
 {

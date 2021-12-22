@@ -29,6 +29,7 @@ public slots:
     void relayFailChange(int relayNumber, const QString& errorMessage);
 
     void on_btnSetSerial_clicked(bool);
+    void on_lineAttachSerial_textEdited(QString);
 
     void _on_btnRelay_clicked(bool);
     void on_btnTurnOnAll_clicked(bool);
