@@ -49,7 +49,7 @@ int main(int argc, char *argv[])
 #endif
 
         // Путь к основному конфиг-файлу
-        QString configFile = config::qdir() + "/usb_relay_demo.conf";
+        QString configFile = config::qdir() + "/usbrelay_demo.conf";
         if (QFile::exists(configFile))
         {
             if (!config::base().readFile(configFile.toStdString()))
@@ -64,7 +64,7 @@ int main(int argc, char *argv[])
             QByteArray conf;
 
             // Создаем демонстрационные конфиг-файлы
-            file.setFileName("://usb_relay_demo.conf");
+            file.setFileName("://usbrelay_demo.conf");
             file.open(QIODevice::ReadOnly);
             conf = file.readAll();
 

@@ -3,7 +3,7 @@ import QbsUtl
 
 Product {
     name: "UsbRelay (Demo)"
-    targetName: "usb-relay-demo"
+    targetName: "usbrelay-demo"
     condition: true
 
     type: "application"
@@ -35,7 +35,7 @@ Product {
     Group {
         name: "resources"
         files: [
-            "usb_relay_demo.qrc",
+            "usbrelay_demo.qrc",
         ]
     }
 
@@ -43,7 +43,7 @@ Product {
         "main_window.cpp",
         "main_window.h",
         "main_window.ui",
-        "usb_relay_demo.cpp",
+        "usbrelay_demo.cpp",
     ]
 
 //    property var test: {

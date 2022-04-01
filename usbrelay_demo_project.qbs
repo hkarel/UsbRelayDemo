@@ -40,7 +40,7 @@ Project {
         if (qbs.buildVariant === "release")
             def.push("NDEBUG");
 
-        def.push("CONFIG_DIR=\"/etc/usb-relay-demo\"");
+        def.push("CONFIG_DIR=\"/etc/usbrelay-demo\"");
         return def;
     }
 
@@ -59,7 +59,7 @@ Project {
     references: [
         "src/shared/shared.qbs",
         "src/usbrelay/usb_relay.qbs",
-        "src/usbrelay_demo/usb_relay_demo.qbs",
+        "src/usbrelay_demo/usbrelay_demo.qbs",
         "src/yaml/yaml.qbs",
     ]
 }
