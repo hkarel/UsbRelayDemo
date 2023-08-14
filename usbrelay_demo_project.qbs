@@ -5,7 +5,7 @@ import "qbs/imports/QbsUtl/qbsutl.js" as QbsUtl
 Project {
     name: "UsbRelayDemo (Project)"
 
-    minimumQbsVersion: "1.18.0"
+    minimumQbsVersion: "1.22.0"
     qbsSearchPaths: ["qbs"]
 
     readonly property var projectVersion: projectProbe.projectVersion
